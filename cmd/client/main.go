@@ -15,7 +15,7 @@ type model struct {
 
 func initModel() model {
 	return model{
-		info:       []string{"PunchKeys", "Press q to quit"},
+		info:       []string{"PunchKeys", "Press ctrl+b to quit"},
 		targetText: "the quick brown fox jumps over the lazy dog",
 		typedText:  "",
 	}
@@ -40,9 +40,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, nil
 			}
 		default:
-			if len(m.typedText) < len(m.targetText) {
-				m.typedText += msg.String()
-			}
+			m.typedText += msg.String()
 		}
 		if checker(m) {
 			return m, tea.Quit
@@ -52,25 +50,37 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 func (m model) View() tea.View {
 	s := strings.Join(m.info, "\n")
-	s += "\n\n" + m.targetText
 	s += "\n" + rendertext(m.targetText, m.typedText)
 	return tea.NewView(s)
 }
 func rendertext(targetText string, typedText string) string {
 	correct := lipgloss.NewStyle().Foreground(lipgloss.Color("2"))
 	incorrect := lipgloss.NewStyle().Foreground(lipgloss.Color("1"))
+	extra := lipgloss.NewStyle().Foreground(lipgloss.Color("1")).Faint(true)
+	standard := lipgloss.NewStyle().Foreground(lipgloss.Color("0")).Faint(true)
 	var result strings.Builder
-	for i, ch := range typedText {
-		if i < len(targetText) && ch == rune(targetText[i]) {
-			result.WriteString(correct.Render(string(ch)))
-		} else {
-			result.WriteString(incorrect.Render(string(ch)))
+	maxlen := max(len(targetText), len(typedText))
+	for i := 0; i < maxlen; i++ {
+		if i >= len(targetText) && i < len(typedText) {
+			result.WriteString(extra.Render(string(typedText[i])))
+			continue
+		}
+		if i < len(targetText) && i < len(typedText) {
+			ch := rune(targetText[i])
+			if ch == rune(typedText[i]) {
+				result.WriteString(correct.Render(string(ch)))
+			} else {
+				result.WriteString(incorrect.Render(string(ch)))
+			}
+		} else if i < len(targetText) {
+			ch := rune(targetText[i])
+			result.WriteString(standard.Render(string(ch)))
 		}
 	}
 	return result.String()
 }
 func checker(m model) bool {
-	if len(m.typedText) == len(m.targetText) {
+	if m.typedText == m.targetText {
 		return true
 	}
 	return false
