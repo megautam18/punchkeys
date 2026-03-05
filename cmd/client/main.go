@@ -77,8 +77,12 @@ func rendertext(targetText string, typedText string, visible bool) string {
 	maxlen := max(len(targetText), len(typedText))
 	curpos := len(typedText)
 	for i := 0; i < maxlen; i++ {
-		if i == curpos && visible {
-			result.WriteString("|")
+		if i == curpos {
+			if visible {
+				result.WriteString("|")
+			} else {
+				result.WriteString(" ")
+			}
 		}
 		if i >= len(targetText) && i < len(typedText) {
 			result.WriteString(extra.Render(string(typedText[i])))
@@ -96,8 +100,12 @@ func rendertext(targetText string, typedText string, visible bool) string {
 			result.WriteString(standard.Render(string(ch)))
 		}
 	}
-	if curpos == maxlen && visible {
-		result.WriteString("|")
+	if curpos == maxlen {
+		if visible {
+			result.WriteString("|")
+		} else {
+			result.WriteString(" ")
+		}
 	}
 	return result.String()
 }
